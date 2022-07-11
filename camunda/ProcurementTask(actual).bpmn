@@ -1,0 +1,980 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0l0gtp1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.0.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.15.0">
+  <bpmn:process id="ProcurementTask" name="ProcurementTask" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Procurement">
+      <bpmn:outgoing>Flow_0yw0dab</bpmn:outgoing>
+      <bpmn:signalEventDefinition id="SignalEventDefinition_1r60uiw" signalRef="Signal_0sefekr" />
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="Gateway_1obdq58" name="Новая закупка?">
+      <bpmn:incoming>Flow_0yw0dab</bpmn:incoming>
+      <bpmn:outgoing>Flow_0dznhx1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1sp2kol</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0yw0dab" sourceRef="StartEvent_1" targetRef="Gateway_1obdq58" />
+    <bpmn:sequenceFlow id="Flow_0dznhx1" name="Да" sourceRef="Gateway_1obdq58" targetRef="Activity_0nqmvev">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("Payload").EventType == 1 }</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="Event_1ukfcpm" name="Таск создан">
+      <bpmn:incoming>Flow_10iphqr</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_11lowzv" sourceRef="Activity_0nqmvev" targetRef="Gateway_1d12jll" />
+    <bpmn:scriptTask id="Activity_0nqmvev" name="Расчитать исполнителей" scriptFormat="JavaScript" camunda:resultVariable="selections">
+      <bpmn:incoming>Flow_0dznhx1</bpmn:incoming>
+      <bpmn:outgoing>Flow_11lowzv</bpmn:outgoing>
+      <bpmn:script>var payload= execution.getVariable("Payload");
+
+var ArrayList = Java.type("java.util.ArrayList");
+var selections = new ArrayList();
+
+
+
+for (var i = 0; i &lt; payload.NewState.Selections.Create.length; i += 1) {
+ selections.add(payload.NewState.Selections.Create[i]);
+}
+
+selections;</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:serviceTask id="Activity_1qxcyib" name="Поставить задачу (Запрос к сервису)">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="JavaScript">var procurement = execution.getVariable("Payload");
+
+var payload = {"ActivityState":2,   "ExternalId":null,"Name": "Заполните отборку","Description":"","Type":3,"Tags":null,"IsConfirmed":true,"ProxyData":null,"ActionLink":null, "executorId": execution.getVariable('s').BuyerId, "subjectEntity": "Superbrands.Bus.Contracts.CSharp.MsSelections.Selections.Selection",
+"subjectId":execution.getVariable('s').Id.toString(),"taskDirectorId": "93", "deadline":new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(), "actualSince":new Date().toISOString(),"actualBefore": new Date(new Date().setDate(new Date().getDate() + 14)).toISOString(),
+"projectName":"Superbrands.Bus.Contracts.CSharp.MsSelections.Procurement.Procurement", "projectId":procurement.NewState.Id.toString()
+  };
+execution.setVariable("setTaskRequest", JSON.stringify(payload));
+JSON.stringify(payload);</camunda:script>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">PUT</camunda:inputParameter>
+            <camunda:inputParameter name="url">http://businessactivities/api/v1/Activities/</camunda:inputParameter>
+            <camunda:outputParameter name="statusCode">${statusCode}</camunda:outputParameter>
+            <camunda:outputParameter name="response">${response}</camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0ux0p42</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ir1mn2</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics camunda:collection="selections" camunda:elementVariable="s" />
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1ir1mn2" sourceRef="Activity_1qxcyib" targetRef="Event_1xvenqk" />
+    <bpmn:sequenceFlow id="Flow_10iphqr" sourceRef="Event_1xvenqk" targetRef="Event_1ukfcpm" />
+    <bpmn:intermediateCatchEvent id="Event_1xvenqk" name="Пауза для теста">
+      <bpmn:incoming>Flow_1ir1mn2</bpmn:incoming>
+      <bpmn:outgoing>Flow_10iphqr</bpmn:outgoing>
+      <bpmn:signalEventDefinition id="SignalEventDefinition_185p18m" signalRef="Signal_0ucn26g" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:exclusiveGateway id="Gateway_1d12jll" name="Есть исполнители?" default="Flow_0ux0p42">
+      <bpmn:incoming>Flow_11lowzv</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ux0p42</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0pj7yo0</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0ux0p42" name="Да" sourceRef="Gateway_1d12jll" targetRef="Activity_1qxcyib" />
+    <bpmn:endEvent id="Event_0315jbl" name="Выходим, т.к. нет исполнителей">
+      <bpmn:incoming>Flow_0pj7yo0</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0pj7yo0" name="Нет" sourceRef="Gateway_1d12jll" targetRef="Event_0315jbl">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="Event_0mjb2i0" name="Конец">
+      <bpmn:incoming>Flow_07bmij7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1sp2kol" name="Нет" sourceRef="Gateway_1obdq58" targetRef="Activity_0qwfl5r">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable("Payload").EventType != 1 }</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_07bmij7" sourceRef="Event_0gu7chp" targetRef="Event_0mjb2i0" />
+    <bpmn:intermediateCatchEvent id="Event_0gu7chp" name="Пауза для теста">
+      <bpmn:incoming>Flow_0kzivx7</bpmn:incoming>
+      <bpmn:outgoing>Flow_07bmij7</bpmn:outgoing>
+      <bpmn:signalEventDefinition id="SignalEventDefinition_1r1vlju" signalRef="Signal_0ucn26g" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:scriptTask id="Activity_0qwfl5r" name="Вытащить отборки" scriptFormat="JavaScript" camunda:resultVariable="selections">
+      <bpmn:incoming>Flow_1sp2kol</bpmn:incoming>
+      <bpmn:outgoing>Flow_0yi3d58</bpmn:outgoing>
+      <bpmn:script>var ArrayList = Java.type("java.util.ArrayList");
+var selections = new ArrayList();
+var payload= execution.getVariable("Payload");
+if(payload.NewState.Selections.Create) {
+for (var i = 0; i &lt; payload.NewState.Selections.Create.length; i += 1) {
+ selections.add(payload.NewState.Selections.Create[i]);
+}
+}
+if(payload.NewState.Selections.Update) {
+for (var i = 0; i &lt; payload.NewState.Selections.Update.length; i += 1) {
+ selections.add(payload.NewState.Selections.Update[i]);
+}
+}
+
+//selections.add(JSON.stringify({"Id":1,"Status":2}));
+//selections.add(JSON.stringify({"Id":2,"Status":2}));
+
+selections;</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:subProcess id="Activity_10b8gjq" name="Для каждой отборки">
+      <bpmn:incoming>Flow_0yi3d58</bpmn:incoming>
+      <bpmn:outgoing>Flow_0kzivx7</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics camunda:collection="selections" camunda:elementVariable="s" />
+      <bpmn:startEvent id="Event_0zfvlyc">
+        <bpmn:outgoing>Flow_1db75ib</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:exclusiveGateway id="Gateway_1mlwz02" name="Статус" default="Flow_1c6uogs">
+        <bpmn:incoming>Flow_0d4uf51</bpmn:incoming>
+        <bpmn:outgoing>Flow_1c6uogs</bpmn:outgoing>
+        <bpmn:outgoing>Flow_1mne9on</bpmn:outgoing>
+        <bpmn:outgoing>Flow_0w7gcl5</bpmn:outgoing>
+        <bpmn:outgoing>Flow_15ra0wf</bpmn:outgoing>
+        <bpmn:outgoing>Flow_1yfsa3y</bpmn:outgoing>
+        <bpmn:outgoing>Flow_02lakli</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="Event_0z4ieds" name="Конец">
+        <bpmn:incoming>Flow_1c6uogs</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:serviceTask id="Activity_0odtm8m" name="Поставить задачу Утвердить отборку">
+        <bpmn:extensionElements>
+          <camunda:connector>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="payload">
+                <camunda:script scriptFormat="JavaScript">var procurement = execution.getVariable("Payload");
+var procurementManager = execution.getVariable("procurementManager");
+
+
+var partnerId = procurement.NewState.PartnerId;
+
+
+var payload = {"ActivityState":2,"ExternalId":null,"Name": "Утвердите отборку " + execution.getVariable('s').Id,
+"SubjectEntity":"Superbrands.Bus.Contracts.CSharp.MsSelections.Selections.Selection",
+"SubjectId":execution.getVariable('s').Id,
+"Description":"","Type":3,"Tags":null,"IsConfirmed":true,"ProxyData":null,"ActionLink":null, "executorId": procurementManager, "taskDirectorId": "93", "deadline":new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(), "actualSince":new Date().toISOString(),"actualBefore": new Date(new Date().setDate(new Date().getDate() + 14)).toISOString(), "projectName":"Superbrands.Bus.Contracts.CSharp.MsSelections.Procurement.Procurement", "projectId":procurement.NewState.Id.toString() };
+
+
+
+
+JSON.stringify(payload);</camunda:script>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="headers">
+                <camunda:map>
+                  <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                  <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+                </camunda:map>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="method">PUT</camunda:inputParameter>
+              <camunda:inputParameter name="url">http://businessactivities/api/v1/Activities/</camunda:inputParameter>
+              <camunda:outputParameter name="statusCode">${statusCode}</camunda:outputParameter>
+              <camunda:outputParameter name="response">${response}</camunda:outputParameter>
+            </camunda:inputOutput>
+            <camunda:connectorId>http-connector</camunda:connectorId>
+          </camunda:connector>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_1mne9on</bpmn:incoming>
+        <bpmn:outgoing>Flow_1qpt3w8</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_1c6uogs" name="Другой" sourceRef="Gateway_1mlwz02" targetRef="Event_0z4ieds" />
+      <bpmn:sequenceFlow id="Flow_1mne9on" name="На утверждении" sourceRef="Gateway_1mlwz02" targetRef="Activity_0odtm8m">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">var s = execution.getVariable('s');
+
+
+var payload= execution.getVariable("Payload");
+
+var statusChanged = false;
+for (var i = 0; i &lt; payload.OriginalState.Selections.Update.length; i += 1) {
+if(payload.OriginalState.Selections.Update[i].Id == s.Id &amp;&amp; payload.OriginalState.Selections.Update[i].Status == 1)
+   statusChanged= true;
+ }
+
+
+s.Status == 2 &amp;&amp; statusChanged;</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_1db75ib" sourceRef="Event_0zfvlyc" targetRef="Activity_1aeity7" />
+      <bpmn:endEvent id="Event_0rub6rh">
+        <bpmn:incoming>Flow_173bpoa</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_1qpt3w8" sourceRef="Activity_0odtm8m" targetRef="Activity_17qy1x6" />
+      <bpmn:serviceTask id="Activity_17qy1x6" name="Завершить действующую Активность">
+        <bpmn:extensionElements>
+          <camunda:connector>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="headers">
+                <camunda:map>
+                  <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                  <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+                </camunda:map>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="method">POST</camunda:inputParameter>
+              <camunda:inputParameter name="url">http://businessactivities/api/v1/Activities/${currentManagerActivity.id}/complete</camunda:inputParameter>
+              <camunda:outputParameter name="completeStatusCode">${statusCode}</camunda:outputParameter>
+              <camunda:outputParameter name="completeResponse">${response}</camunda:outputParameter>
+            </camunda:inputOutput>
+            <camunda:connectorId>http-connector</camunda:connectorId>
+          </camunda:connector>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_1qpt3w8</bpmn:incoming>
+        <bpmn:outgoing>Flow_173bpoa</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_173bpoa" sourceRef="Activity_17qy1x6" targetRef="Event_0rub6rh" />
+      <bpmn:sequenceFlow id="Flow_0w7gcl5" name="Был на Утверждении, стал Активным" sourceRef="Gateway_1mlwz02" targetRef="Activity_0a6m2ej">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">var s = execution.getVariable('s');
+var payload= execution.getVariable("Payload");
+
+var lastStatusWasOnApproval = false;
+for (var i = 0; i &lt; payload.OriginalState.Selections.Update.length; i += 1) {
+if(payload.OriginalState.Selections.Update[i].Id == s.Id &amp;&amp; payload.OriginalState.Selections.Update[i].Status == 2)
+   lastStatusWasOnApproval = true;
+ }
+
+
+s.Status == 1 &amp;&amp; lastStatusWasOnApproval;</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:endEvent id="Event_16pap8z">
+        <bpmn:incoming>Flow_04iwtri</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:serviceTask id="Activity_1gsumen" name="Поставить задачу доработать Отборку на Байера">
+        <bpmn:extensionElements>
+          <camunda:connector>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="payload">
+                <camunda:script scriptFormat="JavaScript">
+var procurement = execution.getVariable("Payload");
+
+var partnerId = procurement.NewState.PartnerId;
+
+
+var payload = {"ActivityState":2,"ExternalId":null,"Name": "Доработайте отборку " + execution.getVariable('s').Id,"Description":"","Type":3,"Tags":null,"IsConfirmed":true,"ProxyData":null,"ActionLink":null, "SubjectEntity":"Superbrands.Bus.Contracts.CSharp.MsSelections.Selections.Selection",
+"SubjectId":execution.getVariable('s').Id, "executorId": execution.getVariable('s').BuyerId, "taskDirectorId": "93", "deadline":new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(), "actualSince":new Date().toISOString(),"actualBefore": new Date(new Date().setDate(new Date().getDate() + 14)).toISOString(),
+"projectName":"Superbrands.Bus.Contracts.CSharp.MsSelections.Procurement.Procurement", "projectId":procurement.NewState.Id.toString() 
+};
+
+execution.setVariable("setTaskRequest", JSON.stringify(payload));
+
+
+JSON.stringify(payload);</camunda:script>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="headers">
+                <camunda:map>
+                  <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                  <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+                </camunda:map>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="method">PUT</camunda:inputParameter>
+              <camunda:inputParameter name="url">http://businessactivities/api/v1/Activities/</camunda:inputParameter>
+              <camunda:outputParameter name="statusCode">${statusCode}</camunda:outputParameter>
+              <camunda:outputParameter name="response">${response}</camunda:outputParameter>
+            </camunda:inputOutput>
+            <camunda:connectorId>http-connector</camunda:connectorId>
+          </camunda:connector>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_03hw530</bpmn:incoming>
+        <bpmn:outgoing>Flow_06a0fq8</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_06a0fq8" sourceRef="Activity_1gsumen" targetRef="Activity_0kec1vu" />
+      <bpmn:sequenceFlow id="Flow_15ra0wf" name="Утверждена" sourceRef="Gateway_1mlwz02" targetRef="Activity_13z64t4">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">var s = execution.getVariable('s');
+
+var payload= execution.getVariable("Payload");
+
+var statusChanged = false;
+for (var i = 0; i &lt; payload.OriginalState.Selections.Update.length; i += 1) {
+if(payload.OriginalState.Selections.Update[i].Id == s.Id &amp;&amp; payload.OriginalState.Selections.Update[i].Status != 3)
+   statusChanged= true;
+ }
+
+
+s.Status == 3 &amp;&amp; statusChanged;
+</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:endEvent id="Event_0vuzf8c">
+        <bpmn:incoming>Flow_0kmrby3</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:serviceTask id="Activity_0kec1vu" name="Завершить действующую Активность">
+        <bpmn:extensionElements>
+          <camunda:connector>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="headers">
+                <camunda:map>
+                  <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                  <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+                </camunda:map>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="method">POST</camunda:inputParameter>
+              <camunda:inputParameter name="url">http://businessactivities/api/v1/Activities/${currentManagerActivity.id}/complete</camunda:inputParameter>
+              <camunda:outputParameter name="completeStatusCode">${statusCode}</camunda:outputParameter>
+              <camunda:outputParameter name="completeResponse">${response}</camunda:outputParameter>
+            </camunda:inputOutput>
+            <camunda:connectorId>http-connector</camunda:connectorId>
+          </camunda:connector>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_06a0fq8</bpmn:incoming>
+        <bpmn:outgoing>Flow_04iwtri</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_04iwtri" sourceRef="Activity_0kec1vu" targetRef="Event_16pap8z" />
+      <bpmn:serviceTask id="Activity_0yf6unz" name="Завершить действующую Активность">
+        <bpmn:extensionElements>
+          <camunda:connector>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="headers">
+                <camunda:map>
+                  <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                  <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+                </camunda:map>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="method">POST</camunda:inputParameter>
+              <camunda:inputParameter name="url">http://businessactivities/api/v1/Activities/${currentManagerActivity.id}/complete</camunda:inputParameter>
+              <camunda:outputParameter name="completeStatusCode">${statusCode}</camunda:outputParameter>
+              <camunda:outputParameter name="completeResponse">${response}</camunda:outputParameter>
+            </camunda:inputOutput>
+            <camunda:connectorId>http-connector</camunda:connectorId>
+          </camunda:connector>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_1oqjvfb</bpmn:incoming>
+        <bpmn:outgoing>Flow_0kmrby3</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_0kmrby3" sourceRef="Activity_0yf6unz" targetRef="Event_0vuzf8c" />
+      <bpmn:sequenceFlow id="Flow_0ixvr2l" sourceRef="Activity_1aeity7" targetRef="Activity_1nyf0xj" />
+      <bpmn:serviceTask id="Activity_1aeity7" name="Получить действующую активность по байеру этой отборки">
+        <bpmn:extensionElements>
+          <camunda:connector>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="url">http://businessactivities/api/v1/Activities/search</camunda:inputParameter>
+              <camunda:inputParameter name="method">POST</camunda:inputParameter>
+              <camunda:inputParameter name="headers">
+                <camunda:map>
+                  <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                  <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+                </camunda:map>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="payload">
+                <camunda:script scriptFormat="JavaScript">var selection = execution.getVariable("s");
+var payload = {
+  "executors": [
+    selection.BuyerId.toString()
+  ],
+
+  "type": 3,
+  "state": 2,
+  "subjectEntity": "Superbrands.Bus.Contracts.CSharp.MsSelections.Selections.Selection",
+  "subjectId": selection.Id.toString(),
+  "page": 1,
+  "pageSize": 10
+};
+execution.setVariable("searchRequest", JSON.stringify(payload));
+JSON.stringify(payload);</camunda:script>
+              </camunda:inputParameter>
+              <camunda:outputParameter name="currentManagerActivity">
+                <camunda:script scriptFormat="JavaScript">var response = connector.getVariable("response");
+connector.setVariable("searchresponse", response);
+var currentManagerActivity = JSON.parse(response).results[0];
+currentManagerActivity;
+</camunda:script>
+              </camunda:outputParameter>
+              <camunda:outputParameter name="getCurrentActivityStatus">${statusCode}</camunda:outputParameter>
+            </camunda:inputOutput>
+            <camunda:connectorId>http-connector</camunda:connectorId>
+          </camunda:connector>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_1db75ib</bpmn:incoming>
+        <bpmn:outgoing>Flow_0ixvr2l</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:serviceTask id="Activity_1nyf0xj" name="Получить Руководителя закупки">
+        <bpmn:extensionElements>
+          <camunda:connector>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="procurement">${Payload}</camunda:inputParameter>
+              <camunda:inputParameter name="headers">
+                <camunda:map>
+                  <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                  <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+                </camunda:map>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="method">GET</camunda:inputParameter>
+              <camunda:inputParameter name="url">http://members/api/v1/members/${s.BuyerId}/structure_manager</camunda:inputParameter>
+              <camunda:outputParameter name="procurementManager">
+                <camunda:script scriptFormat="JavaScript">var response = connector.getVariable("response");
+var procurement = connector.getVariable("procurement");
+var partnerId = procurement.NewState.PartnerId;
+
+var procurementManager = JSON.parse(response)[0];
+procurementManager;</camunda:script>
+              </camunda:outputParameter>
+              <camunda:outputParameter name="users_statusCode">${statusCode}</camunda:outputParameter>
+            </camunda:inputOutput>
+            <camunda:connectorId>http-connector</camunda:connectorId>
+          </camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="procurement">${Payload}</camunda:inputParameter>
+          </camunda:inputOutput>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_0ixvr2l</bpmn:incoming>
+        <bpmn:outgoing>Flow_0d4uf51</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_0d4uf51" sourceRef="Activity_1nyf0xj" targetRef="Gateway_1mlwz02" />
+      <bpmn:serviceTask id="Activity_13z64t4" name="Получить действующую активность по  менеджеру байеру этой отборки">
+        <bpmn:extensionElements>
+          <camunda:connector>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="url">http://businessactivities/api/v1/Activities/search</camunda:inputParameter>
+              <camunda:inputParameter name="method">POST</camunda:inputParameter>
+              <camunda:inputParameter name="headers">
+                <camunda:map>
+                  <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                  <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+                </camunda:map>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="payload">
+                <camunda:script scriptFormat="JavaScript">var selection = execution.getVariable("s");
+var payload = {
+  "executors": [
+    procurementManager
+  ],
+
+  "type": 3,
+  "state": 2,
+  "subjectEntity": "Superbrands.Bus.Contracts.CSharp.MsSelections.Selections.Selection",
+  "subjectId": selection.Id.toString(),
+  "page": 1,
+  "pageSize": 10
+};
+execution.setVariable("searchRequest", JSON.stringify(payload));
+JSON.stringify(payload);</camunda:script>
+              </camunda:inputParameter>
+              <camunda:outputParameter name="currentManagerActivity">
+                <camunda:script scriptFormat="JavaScript">var response = connector.getVariable("response");
+connector.setVariable("searchresponse", response);
+var currentManagerActivity = JSON.parse(response).results[0];
+currentManagerActivity;
+</camunda:script>
+              </camunda:outputParameter>
+              <camunda:outputParameter name="getCurrentActivityStatus">${statusCode}</camunda:outputParameter>
+            </camunda:inputOutput>
+            <camunda:connectorId>http-connector</camunda:connectorId>
+          </camunda:connector>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_15ra0wf</bpmn:incoming>
+        <bpmn:outgoing>Flow_1oqjvfb</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_1oqjvfb" sourceRef="Activity_13z64t4" targetRef="Activity_0yf6unz" />
+      <bpmn:serviceTask id="Activity_0a6m2ej" name="Получить действующую активность по  менеджеру байеру этой отборки">
+        <bpmn:extensionElements>
+          <camunda:connector>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="url">http://businessactivities/api/v1/Activities/search</camunda:inputParameter>
+              <camunda:inputParameter name="method">POST</camunda:inputParameter>
+              <camunda:inputParameter name="headers">
+                <camunda:map>
+                  <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                  <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+                </camunda:map>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="payload">
+                <camunda:script scriptFormat="JavaScript">var selection = execution.getVariable("s");
+var payload = {
+  "executors": [
+    procurementManager
+  ],
+
+  "type": 3,
+  "state": 2,
+  "subjectEntity": "Superbrands.Bus.Contracts.CSharp.MsSelections.Selections.Selection",
+  "subjectId": selection.Id.toString(),
+  "page": 1,
+  "pageSize": 10
+};
+execution.setVariable("searchRequest", JSON.stringify(payload));
+JSON.stringify(payload);</camunda:script>
+              </camunda:inputParameter>
+              <camunda:outputParameter name="currentManagerActivity">
+                <camunda:script scriptFormat="JavaScript">var response = connector.getVariable("response");
+connector.setVariable("searchresponse", response);
+var currentManagerActivity = JSON.parse(response).results[0];
+currentManagerActivity;
+</camunda:script>
+              </camunda:outputParameter>
+              <camunda:outputParameter name="getCurrentActivityStatus">${statusCode}</camunda:outputParameter>
+            </camunda:inputOutput>
+            <camunda:connectorId>http-connector</camunda:connectorId>
+          </camunda:connector>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_0w7gcl5</bpmn:incoming>
+        <bpmn:outgoing>Flow_03hw530</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_03hw530" sourceRef="Activity_0a6m2ej" targetRef="Activity_1gsumen" />
+      <bpmn:serviceTask id="Activity_1vjqmp2" name="Завершить действующую Активность">
+        <bpmn:extensionElements>
+          <camunda:connector>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="headers">
+                <camunda:map>
+                  <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                  <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+                </camunda:map>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="method">POST</camunda:inputParameter>
+              <camunda:inputParameter name="url">http://businessactivities/api/v1/Activities/${currentManagerActivity.id}/complete</camunda:inputParameter>
+              <camunda:outputParameter name="completeStatusCode">${statusCode}</camunda:outputParameter>
+              <camunda:outputParameter name="completeResponse">${response}</camunda:outputParameter>
+            </camunda:inputOutput>
+            <camunda:connectorId>http-connector</camunda:connectorId>
+          </camunda:connector>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_0grewpx</bpmn:incoming>
+        <bpmn:outgoing>Flow_11ei4y4</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_1yfsa3y" name="Активная отборка" sourceRef="Gateway_1mlwz02" targetRef="Activity_06s8rc0">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">var s = execution.getVariable('s');
+
+
+var payload= execution.getVariable("Payload");
+
+var lastStatusWasEmpty = false;
+for (var i = 0; i &lt; payload.OriginalState.Selections.Update.length; i += 1) {
+if(payload.OriginalState.Selections.Update[i].Id == s.Id &amp;&amp; payload.OriginalState.Selections.Update[i].Status == 4)
+   lastStatusWasEmpty= true;
+ }
+
+
+s.Status == 1 &amp;&amp; lastStatusWasEmpty;</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:endEvent id="Event_08atazd">
+        <bpmn:incoming>Flow_11ei4y4</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_11ei4y4" sourceRef="Activity_1vjqmp2" targetRef="Event_08atazd" />
+      <bpmn:serviceTask id="Activity_06s8rc0" name="Поставить задачу Отправить отборку на утверждение">
+        <bpmn:extensionElements>
+          <camunda:connector>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="payload">
+                <camunda:script scriptFormat="JavaScript">var procurement = execution.getVariable("Payload");
+var procurementManager = execution.getVariable("procurementManager");
+
+
+var partnerId = procurement.NewState.PartnerId;
+
+
+var payload = {"ActivityState":2,"ExternalId":null,"Name": "Отправьте отборку " + execution.getVariable('s').Id + " на утверждение",
+"SubjectEntity":"Superbrands.Bus.Contracts.CSharp.MsSelections.Selections.Selection",
+"SubjectId":execution.getVariable('s').Id,
+"Description":"","Type":3,"Tags":null,"IsConfirmed":true,"ProxyData":null,"ActionLink":null, "executorId": execution.getVariable('s').BuyerId, "taskDirectorId": "93", "deadline":new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(), "actualSince":new Date().toISOString(),"actualBefore": new Date(new Date().setDate(new Date().getDate() + 14)).toISOString(), "projectName":"Superbrands.Bus.Contracts.CSharp.MsSelections.Procurement.Procurement", "projectId":procurement.NewState.Id.toString() };
+
+
+
+
+JSON.stringify(payload);</camunda:script>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="headers">
+                <camunda:map>
+                  <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                  <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+                </camunda:map>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="method">PUT</camunda:inputParameter>
+              <camunda:inputParameter name="url">http://businessactivities/api/v1/Activities/</camunda:inputParameter>
+              <camunda:outputParameter name="statusCode">${statusCode}</camunda:outputParameter>
+              <camunda:outputParameter name="response">${response}</camunda:outputParameter>
+            </camunda:inputOutput>
+            <camunda:connectorId>http-connector</camunda:connectorId>
+          </camunda:connector>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_1yfsa3y</bpmn:incoming>
+        <bpmn:outgoing>Flow_0grewpx</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_0grewpx" sourceRef="Activity_06s8rc0" targetRef="Activity_1vjqmp2" />
+      <bpmn:serviceTask id="Activity_1n5o3pb" name="Поставить задачу Заполнить отборку">
+        <bpmn:extensionElements>
+          <camunda:connector>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="payload">
+                <camunda:script scriptFormat="JavaScript">var procurement = execution.getVariable("Payload");
+var procurementManager = execution.getVariable("procurementManager");
+
+
+var partnerId = procurement.NewState.PartnerId;
+
+
+var payload = {"ActivityState":2,"ExternalId":null,"Name": "Заполните отборку " + execution.getVariable('s').Id,
+"SubjectEntity":"Superbrands.Bus.Contracts.CSharp.MsSelections.Selections.Selection",
+"SubjectId":execution.getVariable('s').Id,
+"Description":"","Type":3,"Tags":null,"IsConfirmed":true,"ProxyData":null,"ActionLink":null, "executorId": execution.getVariable('s').BuyerId, "taskDirectorId": "93", "deadline":new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(), "actualSince":new Date().toISOString(),"actualBefore": new Date(new Date().setDate(new Date().getDate() + 14)).toISOString(), "projectName":"Superbrands.Bus.Contracts.CSharp.MsSelections.Procurement.Procurement", "projectId":procurement.NewState.Id.toString() };
+
+
+
+
+JSON.stringify(payload);</camunda:script>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="headers">
+                <camunda:map>
+                  <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                  <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+                </camunda:map>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="method">PUT</camunda:inputParameter>
+              <camunda:inputParameter name="url">http://businessactivities/api/v1/Activities/</camunda:inputParameter>
+              <camunda:outputParameter name="statusCode">${statusCode}</camunda:outputParameter>
+              <camunda:outputParameter name="response">${response}</camunda:outputParameter>
+            </camunda:inputOutput>
+            <camunda:connectorId>http-connector</camunda:connectorId>
+          </camunda:connector>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_02lakli</bpmn:incoming>
+        <bpmn:outgoing>Flow_0tz53kh</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:serviceTask id="Activity_0ccxz7y" name="Завершить действующую Активность">
+        <bpmn:extensionElements>
+          <camunda:connector>
+            <camunda:inputOutput>
+              <camunda:inputParameter name="headers">
+                <camunda:map>
+                  <camunda:entry key="authorization">Bearer eyJhbGciOiJSUzUxMiIsImtpZCI6IjdBMjBFODE2NTk1MDc1RUQzMzFCREE3OTY1REEyM0E3OTRGMTQzQzIiLCJ0eXAiOiJiZWFyZXIiLCJ4NXQiOiJlaURvRmxsUWRlMHpHOXA1WmRvanA1VHhROEkifQ.eyJuYmYiOjE2MDYzODQzMDksImV4cCI6MTY5Mjc4NDMwOSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiY2xpZW50X2lkIjoiV2ViIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoidXNlciIsInN1YiI6IjkzIiwiYXV0aF90aW1lIjoxNjA2Mzg0Mjc1LCJpZHAiOiJsb2NhbCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5ydSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6ItCi0LXRgdGCIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6ItCi0LXRgdGC0L7QsiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLQotC10YHRgtC-0LLRi9C5INCf0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCDQndC1INC80LXQvdGP0LkiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6Iis3OTE3NTIzMjEwNiIsInBvc2l0aW9uIjoiRGV2ZWxvcGVyIiwiZGVwYXJ0bWVudElkIjoiNSIsImlzTGVhZCI6IlRydWUiLCJqdGkiOiIwNjFBOTc1RTlBRTMxOUVEODA2NDkwNTc2NTE3MENGNiIsInNpZCI6IjREQ0I4RkUwQ0JGMTc0NzkxMDRGQTY2NjE4NDRGRkJDIiwiaWF0IjoxNjA2Mzg0MzA5LCJzY29wZSI6WyJBbnkiXSwiYW1yIjpbInB3ZCJdfQ.UDKKmfCu9r-JMQ8PGvopoze_eiFFtFOem8oywzrGNEbl7Vw8W3mTSIm6vi6gx-v6vK9L5ERwNCIR6j8m5V8J4JLLy2d7VrmIbf60Qc1O0BpBjYfx6VZgTpEMYMxpdxtYvrLRSrSeeoMIGorzLIM8z82xT4-bhs31pddAb7jh3WeZvhydRD8mJkFBuzOtGWqa7gPJXnWeoiKjFnvAa_Pr49PGJlNb-ioAWe0uKy1XdDeeBnSNyyyVIsiP2RquKEje2Lo9_mmySrL_mrlhgmGOfugTSkMwT2YsK5zzqkjuZMyl3xcas-8oK9tnFEa6wsXQ1lNSkdOeKVIkPL6ZSujpVA9Vyk9UM7-gSIkoNPkB1mgGT9cNVtMECjdVtHZXGf7dIlHKWkKkCFDVe4HWCE_QLFmkWFiNodrBEHRh6o5EoxlmtyQKPmMwbUoMXj41SxvyKAS1jr9QzvnmjKvVXTFIbxU4siKXRCHw2xozwW3oM09X0xZ_nQ9ugcJ1R_XnU6Rai04eshDnegZ2HFg6u4ioeuriRkA6_HqiUQ2efomQKtoAWOssLhzVOOWlOr7Z36qn5QtC2G6YOooissSBPhc4Lkx3bmQgN6R6KToVQFe2Dud1TFjTKUPEWtfGvWwydiXuoR2usEge8PljjfVztHcsvxdKG6pGXdjmBJ7n86lm5l8</camunda:entry>
+                  <camunda:entry key="Content-Type">application/json-patch+json</camunda:entry>
+                </camunda:map>
+              </camunda:inputParameter>
+              <camunda:inputParameter name="method">POST</camunda:inputParameter>
+              <camunda:inputParameter name="url">http://businessactivities/api/v1/Activities/${currentManagerActivity.id}/complete</camunda:inputParameter>
+              <camunda:outputParameter name="completeStatusCode">${statusCode}</camunda:outputParameter>
+              <camunda:outputParameter name="completeResponse">${response}</camunda:outputParameter>
+            </camunda:inputOutput>
+            <camunda:connectorId>http-connector</camunda:connectorId>
+          </camunda:connector>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_0tz53kh</bpmn:incoming>
+        <bpmn:outgoing>Flow_0m8ir4p</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="Event_0se70cr">
+        <bpmn:incoming>Flow_0m8ir4p</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_0tz53kh" sourceRef="Activity_1n5o3pb" targetRef="Activity_0ccxz7y" />
+      <bpmn:sequenceFlow id="Flow_0m8ir4p" sourceRef="Activity_0ccxz7y" targetRef="Event_0se70cr" />
+      <bpmn:sequenceFlow id="Flow_02lakli" name="Очищенная отборка" sourceRef="Gateway_1mlwz02" targetRef="Activity_1n5o3pb">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">var s = execution.getVariable('s');
+
+
+var payload= execution.getVariable("Payload");
+
+var statusChanged = false;
+for (var i = 0; i &lt; payload.OriginalState.Selections.Update.length; i += 1) {
+if(payload.OriginalState.Selections.Update[i].Id == s.Id &amp;&amp; payload.OriginalState.Selections.Update[i].Status != 4)
+   statusChanged= true;
+ }
+
+
+s.Status == 4 &amp;&amp; lastStatusWasEmpty;</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="Flow_0yi3d58" sourceRef="Activity_0qwfl5r" targetRef="Activity_10b8gjq" />
+    <bpmn:sequenceFlow id="Flow_0kzivx7" sourceRef="Activity_10b8gjq" targetRef="Event_0gu7chp" />
+  </bpmn:process>
+  <bpmn:signal id="Signal_0sefekr" name="Procurement" />
+  <bpmn:signal id="Signal_0ucn26g" name="test" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="ProcurementTask">
+      <bpmndi:BPMNEdge id="Flow_0kzivx7_di" bpmnElement="Flow_0kzivx7">
+        <di:waypoint x="1470" y="650" />
+        <di:waypoint x="1470" y="478" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0yi3d58_di" bpmnElement="Flow_0yi3d58">
+        <di:waypoint x="490" y="460" />
+        <di:waypoint x="570" y="460" />
+        <di:waypoint x="570" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_07bmij7_di" bpmnElement="Flow_07bmij7">
+        <di:waypoint x="1470" y="442" />
+        <di:waypoint x="1470" y="422" />
+        <di:waypoint x="1520" y="422" />
+        <di:waypoint x="1520" y="452" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1sp2kol_di" bpmnElement="Flow_1sp2kol">
+        <di:waypoint x="400" y="285" />
+        <di:waypoint x="400" y="353" />
+        <di:waypoint x="440" y="353" />
+        <di:waypoint x="440" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="406" y="359" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0pj7yo0_di" bpmnElement="Flow_0pj7yo0">
+        <di:waypoint x="710" y="145" />
+        <di:waypoint x="710" y="230" />
+        <di:waypoint x="912" y="230" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="716" y="185" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ux0p42_di" bpmnElement="Flow_0ux0p42">
+        <di:waypoint x="735" y="120" />
+        <di:waypoint x="880" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="801" y="102" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10iphqr_di" bpmnElement="Flow_10iphqr">
+        <di:waypoint x="1098" y="120" />
+        <di:waypoint x="1182" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ir1mn2_di" bpmnElement="Flow_1ir1mn2">
+        <di:waypoint x="980" y="120" />
+        <di:waypoint x="1062" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11lowzv_di" bpmnElement="Flow_11lowzv">
+        <di:waypoint x="590" y="120" />
+        <di:waypoint x="685" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0dznhx1_di" bpmnElement="Flow_0dznhx1">
+        <di:waypoint x="400" y="235" />
+        <di:waypoint x="400" y="140" />
+        <di:waypoint x="454" y="140" />
+        <di:waypoint x="454" y="120" />
+        <di:waypoint x="490" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="409" y="185" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0yw0dab_di" bpmnElement="Flow_0yw0dab">
+        <di:waypoint x="208" y="260" />
+        <di:waypoint x="375" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_1hhyoza_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="172" y="242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="158" y="285" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1obdq58_di" bpmnElement="Gateway_1obdq58" isMarkerVisible="true">
+        <dc:Bounds x="375" y="235" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="440" y="250" width="80" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1ukfcpm_di" bpmnElement="Event_1ukfcpm">
+        <dc:Bounds x="1182" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1170" y="145" width="61" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1iuxngu_di" bpmnElement="Activity_0nqmvev">
+        <dc:Bounds x="490" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1qxcyib_di" bpmnElement="Activity_1qxcyib">
+        <dc:Bounds x="880" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_05r9n3y_di" bpmnElement="Event_1xvenqk">
+        <dc:Bounds x="1062" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1040" y="145" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1d12jll_di" bpmnElement="Gateway_1d12jll" isMarkerVisible="true">
+        <dc:Bounds x="685" y="95" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="674" y="58" width="72" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0315jbl_di" bpmnElement="Event_0315jbl">
+        <dc:Bounds x="912" y="212" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="895" y="255" width="72" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0mjb2i0_di" bpmnElement="Event_0mjb2i0">
+        <dc:Bounds x="1502" y="452" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1505" y="508" width="32" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_01x4i2x_di" bpmnElement="Event_0gu7chp">
+        <dc:Bounds x="1452" y="442" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1358" y="453" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0494pmd_di" bpmnElement="Activity_0qwfl5r">
+        <dc:Bounds x="390" y="420" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_10b8gjq_di" bpmnElement="Activity_10b8gjq" isExpanded="true">
+        <dc:Bounds x="560" y="650" width="1390" height="840" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_03hw530_di" bpmnElement="Flow_03hw530">
+        <di:waypoint x="1210" y="1230" />
+        <di:waypoint x="1240" y="1230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1oqjvfb_di" bpmnElement="Flow_1oqjvfb">
+        <di:waypoint x="1210" y="1380" />
+        <di:waypoint x="1370" y="1380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0d4uf51_di" bpmnElement="Flow_0d4uf51">
+        <di:waypoint x="880" y="740" />
+        <di:waypoint x="945" y="740" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ixvr2l_di" bpmnElement="Flow_0ixvr2l">
+        <di:waypoint x="760" y="740" />
+        <di:waypoint x="780" y="740" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0kmrby3_di" bpmnElement="Flow_0kmrby3">
+        <di:waypoint x="1470" y="1380" />
+        <di:waypoint x="1632" y="1380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04iwtri_di" bpmnElement="Flow_04iwtri">
+        <di:waypoint x="1470" y="1230" />
+        <di:waypoint x="1632" y="1230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15ra0wf_di" bpmnElement="Flow_15ra0wf">
+        <di:waypoint x="970" y="765" />
+        <di:waypoint x="970" y="1380" />
+        <di:waypoint x="1110" y="1380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="976" y="1363" width="62" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_06a0fq8_di" bpmnElement="Flow_06a0fq8">
+        <di:waypoint x="1340" y="1230" />
+        <di:waypoint x="1370" y="1230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0w7gcl5_di" bpmnElement="Flow_0w7gcl5">
+        <di:waypoint x="970" y="765" />
+        <di:waypoint x="970" y="1230" />
+        <di:waypoint x="1110" y="1230" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="997" y="1190" width="78" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_173bpoa_di" bpmnElement="Flow_173bpoa">
+        <di:waypoint x="1470" y="1090" />
+        <di:waypoint x="1632" y="1090" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1qpt3w8_di" bpmnElement="Flow_1qpt3w8">
+        <di:waypoint x="1210" y="1090" />
+        <di:waypoint x="1370" y="1090" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1db75ib_di" bpmnElement="Flow_1db75ib">
+        <di:waypoint x="628" y="740" />
+        <di:waypoint x="660" y="740" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1mne9on_di" bpmnElement="Flow_1mne9on">
+        <di:waypoint x="970" y="765" />
+        <di:waypoint x="970" y="1090" />
+        <di:waypoint x="1110" y="1090" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="993" y="1072" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1c6uogs_di" bpmnElement="Flow_1c6uogs">
+        <di:waypoint x="959" y="754" />
+        <di:waypoint x="800" y="950" />
+        <di:waypoint x="733" y="1008" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="736" y="970" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1yfsa3y_di" bpmnElement="Flow_1yfsa3y">
+        <di:waypoint x="970" y="765" />
+        <di:waypoint x="970" y="950" />
+        <di:waypoint x="1110" y="950" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1012" y="926" width="47" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11ei4y4_di" bpmnElement="Flow_11ei4y4">
+        <di:waypoint x="1470" y="950" />
+        <di:waypoint x="1632" y="950" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0grewpx_di" bpmnElement="Flow_0grewpx">
+        <di:waypoint x="1210" y="950" />
+        <di:waypoint x="1370" y="950" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0tz53kh_di" bpmnElement="Flow_0tz53kh">
+        <di:waypoint x="1210" y="840" />
+        <di:waypoint x="1370" y="840" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0m8ir4p_di" bpmnElement="Flow_0m8ir4p">
+        <di:waypoint x="1470" y="840" />
+        <di:waypoint x="1632" y="840" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_02lakli_di" bpmnElement="Flow_02lakli">
+        <di:waypoint x="970" y="765" />
+        <di:waypoint x="970" y="840" />
+        <di:waypoint x="1110" y="840" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1006" y="816" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Gateway_1mlwz02_di" bpmnElement="Gateway_1mlwz02" isMarkerVisible="true">
+        <dc:Bounds x="945" y="715" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="952" y="691" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0z4ieds_di" bpmnElement="Event_0z4ieds">
+        <dc:Bounds x="702" y="1002" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="705" y="1045" width="32" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_17qy1x6_di" bpmnElement="Activity_17qy1x6">
+        <dc:Bounds x="1370" y="1050" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0kec1vu_di" bpmnElement="Activity_0kec1vu">
+        <dc:Bounds x="1370" y="1190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0yf6unz_di" bpmnElement="Activity_0yf6unz">
+        <dc:Bounds x="1370" y="1340" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1gsumen_di" bpmnElement="Activity_1gsumen">
+        <dc:Bounds x="1240" y="1190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_00a9jmm" bpmnElement="Activity_0a6m2ej">
+        <dc:Bounds x="1110" y="1190" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0odtm8m_di" bpmnElement="Activity_0odtm8m">
+        <dc:Bounds x="1110" y="1050" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0omnums" bpmnElement="Activity_1vjqmp2">
+        <dc:Bounds x="1370" y="910" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1qpknrp" bpmnElement="Activity_13z64t4">
+        <dc:Bounds x="1110" y="1340" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0rub6rh_di" bpmnElement="Event_0rub6rh">
+        <dc:Bounds x="1632" y="1072" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_16pap8z_di" bpmnElement="Event_16pap8z">
+        <dc:Bounds x="1632" y="1212" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0vuzf8c_di" bpmnElement="Event_0vuzf8c">
+        <dc:Bounds x="1632" y="1362" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1pqr2dm" bpmnElement="Event_08atazd">
+        <dc:Bounds x="1632" y="932" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_10v5pcf" bpmnElement="Activity_06s8rc0">
+        <dc:Bounds x="1110" y="910" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1atgims" bpmnElement="Activity_1n5o3pb">
+        <dc:Bounds x="1110" y="800" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1lsphw4" bpmnElement="Activity_0ccxz7y">
+        <dc:Bounds x="1370" y="800" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0ah7uc9" bpmnElement="Event_0se70cr">
+        <dc:Bounds x="1632" y="822" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_00jdb32_di" bpmnElement="Activity_1aeity7">
+        <dc:Bounds x="660" y="700" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0ar7zmr" bpmnElement="Activity_1nyf0xj">
+        <dc:Bounds x="780" y="700" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0zfvlyc_di" bpmnElement="Event_0zfvlyc">
+        <dc:Bounds x="592" y="722" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Superbrands.Libs.Bus.Client" Version="1.3.3" />
+      <PackageReference Include="Superbrands.Libs.Bus.Contracts.CSharp" Version="1.7.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Superbrands.BusinessProcessor.Application\Superbrands.BusinessProcessor.Application.csproj" />
+    </ItemGroup>
+
+</Project>
